@@ -2,6 +2,9 @@
 <html lang="sv">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Tiny Magic Dino — Bana 2: LINDENGARD</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -16,6 +19,10 @@
     padding: 24px 16px;
     color: #5b3a1f;
     overflow-x: hidden;
+    overscroll-behavior: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
   h1 {
     font-size: 28px;
@@ -54,13 +61,20 @@
     transform: scale(1.18) rotate(-4deg);
     box-shadow: 0 4px 12px rgba(249, 168, 37, 0.4);
   }
+  .canvas-wrap {
+    width: 100%;
+    max-width: 800px;
+  }
   canvas {
     border: 4px solid #5b3a1f;
     border-radius: 12px;
     background: linear-gradient(180deg, #aee1f9 0%, #d8efff 65%, #ffe9c1 100%);
     display: block;
     box-shadow: 0 12px 30px rgba(91, 58, 31, 0.25);
-    max-width: 100%;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 2 / 1;
+    touch-action: none;
   }
   .instructions {
     margin-top: 14px;
@@ -141,17 +155,88 @@
     0% { transform: translateY(-30px) rotate(0deg); opacity: 1; }
     100% { transform: translateY(110vh) rotate(720deg); opacity: 0.8; }
   }
+
+  /* Touch controls — only visible on mobile / touch devices */
+  .touch-bar {
+    display: none;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+    gap: 10px;
+    background: rgba(255, 233, 193, 0.94);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 3px solid #5b3a1f;
+    z-index: 5;
+  }
+  .touch-btn {
+    flex: 1;
+    height: 64px;
+    border: 3px solid #5b3a1f;
+    background: #fff;
+    color: #5b3a1f;
+    border-radius: 14px;
+    font-size: 22px;
+    font-weight: 800;
+    font-family: inherit;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #5b3a1f;
+    padding: 0;
+  }
+  .touch-btn:active {
+    background: #ffd54f;
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #5b3a1f;
+  }
+  .touch-jump {
+    flex: 2;
+    background: #ffd54f;
+    font-size: 20px;
+  }
+  .touch-jump:active {
+    background: #fb8c00;
+    color: white;
+  }
+
+  .mobile-only { display: none; }
+
+  @media (hover: none) and (pointer: coarse), (max-width: 720px) {
+    .touch-bar { display: flex; }
+    body { padding-bottom: 110px; }
+    .desktop-only { display: none; }
+    .mobile-only { display: block; }
+    .letter-slot { width: 28px; height: 28px; font-size: 13px; }
+    .hud { gap: 5px; }
+    h1 { font-size: 22px; margin-bottom: 2px; }
+    .subtitle { font-size: 12px; margin-bottom: 10px; }
+    .instructions { font-size: 13px; padding: 6px 12px; }
+  }
 </style>
 </head>
 <body>
   <h1>Tiny Magic Dino</h1>
   <div class="subtitle">Bana 2 — Samla bokstäverna</div>
   <div class="hud" id="hud"></div>
-  <canvas id="game" width="800" height="400"></canvas>
-  <p class="instructions">
+  <div class="canvas-wrap">
+    <canvas id="game" width="800" height="400"></canvas>
+  </div>
+  <p class="instructions desktop-only">
     Hoppa <kbd>Space</kbd> eller <kbd>↑</kbd> &nbsp;·&nbsp;
     Spring <kbd>←</kbd> <kbd>→</kbd>
   </p>
+  <p class="instructions mobile-only">Tryck på <strong>HOPPA</strong> · Håll <strong>◀</strong> / <strong>▶</strong> för att springa</p>
+
+  <div class="touch-bar" id="touchBar">
+    <button type="button" class="touch-btn touch-dir" id="btnLeft" aria-label="Vänster">◀</button>
+    <button type="button" class="touch-btn touch-jump" id="btnJump" aria-label="Hoppa">HOPPA</button>
+    <button type="button" class="touch-btn touch-dir" id="btnRight" aria-label="Höger">▶</button>
+  </div>
 
   <div class="win-overlay" id="winOverlay">
     <div class="win-card">
@@ -600,6 +685,28 @@ function loop() {
   draw();
   requestAnimationFrame(loop);
 }
+
+// Touch controls — map buttons onto the same `keys` object as keyboard input
+function setupTouchButton(id, code) {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  const press = (e) => { e.preventDefault(); keys[code] = true; };
+  const release = (e) => { e.preventDefault(); keys[code] = false; };
+  btn.addEventListener('touchstart', press, { passive: false });
+  btn.addEventListener('touchend', release, { passive: false });
+  btn.addEventListener('touchcancel', release);
+  btn.addEventListener('mousedown', press);
+  btn.addEventListener('mouseup', release);
+  btn.addEventListener('mouseleave', release);
+  btn.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+setupTouchButton('btnLeft', 'ArrowLeft');
+setupTouchButton('btnRight', 'ArrowRight');
+setupTouchButton('btnJump', 'Space');
+
+// Tapping the canvas shouldn't scroll/zoom the page
+canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+canvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 
 reset();
 loop();

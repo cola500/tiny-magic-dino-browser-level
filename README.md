@@ -24,9 +24,34 @@ A side-scrolling mini-level where you control a friendly dinosaur, collect the l
 
 ## Controls
 
+**Desktop:**
 - `Space` or `↑` — jump
 - `←` `→` — run
 - `R` — restart after winning
+
+**Mobile / touch:**
+- Tap **HOPPA** to jump
+- Hold **◀** / **▶** to run left / right
+- Touch controls appear automatically on touch devices
+- Desktop keyboard still works in parallel
+
+## Mobile support
+
+The game scales responsively and shows a thumb-friendly control bar at the bottom of the screen on touch devices. Tested patterns:
+
+- Viewport locked (no pinch-zoom, no pull-to-refresh)
+- Canvas keeps its 2:1 aspect ratio and scales to screen width
+- Letter HUD shrinks on small screens
+- Touch buttons sit above the iOS home-indicator safe area
+
+### Mobile verification checklist
+- [ ] Open the Pages URL on a phone — page loads without horizontal scroll
+- [ ] HUD with 10 letter slots is visible above the canvas
+- [ ] Tapping **HOPPA** makes the dino jump
+- [ ] Holding **▶** runs the dino right
+- [ ] Holding **◀** runs the dino left
+- [ ] Scrolling the page is locked while playing (no accidental jumps from drag)
+- [ ] You can complete the level: collect all letters, reach the flag, see the win screen with confetti
 
 ## How to run locally
 
