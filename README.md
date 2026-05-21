@@ -2,7 +2,7 @@
 
 A tiny browser game built end-to-end in ~10 minutes as an AI-assisted rapid prototyping experiment.
 
-**Play it live:** _(GitHub Pages URL goes here once enabled)_
+**Play it live:** https://cola500.github.io/tiny-magic-dino-browser-level/
 
 ## What this experiment tested
 
